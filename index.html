@@ -1,91 +1,379 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="index.css">
-    <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
-    <title>My Profile</title>
+    <title>Wong Jun Keat - Cybersecurity & Developer Portfolio</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔒</text></svg>">
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-
 <body>
-    <header>
-        <h1>WELCOME TO MY PROFILE PAGE</h1>
-        <h2>I'm a back-end developer</h2>
-    </header>
-
-    <section id="about">
-        <div class="auto">
-            <h2 class="title">About Me</h2>
-            <img src="img/profile.jpg" alt="Profile Picture" class="profile-picture">
-            <p>My name is Wong Jun Keat, and I am a student at Tarumt. I will be graduating with a diploma in
-                Information
-                Technology.
-                With about 1 year of experience in back-end development, I have developed a strong proficiency in Java,
-                SQL, C+, Linux, and PHP.</p>
-            <p>
-                Outside of work, I am passionate about working on small projects. I enjoy dedicating my free time to
-                these
-                projects as it allows me to improve my programming skills and explore new technologies.
-            </p>
-            <div>
-                <a href="https://www.facebook.com/profile.php?id=100009038949213" class="social-link">
-                    <iconify-icon icon="teenyicons:facebook-outline" class="icon"></iconify-icon> Facebook
-                </a>
-                <a href="https://twitter.com/wongjushao" class="social-link">
-                    <iconify-icon icon="brandico:twitter-bird" class="icon"></iconify-icon> Twitter
-                </a>
-                <a href="https://www.linkedin.com/in/%E4%BF%8A%E6%9D%B0-%E7%BF%81-2aa055294/?locale=en_US"
-                    class="social-link">
-                    <iconify-icon icon="mingcute:linkedin-line" class="icon"></iconify-icon> LinkedIn
-                </a>
-                <a href="https://github.com/wongjushao" class="social-link">
-                    <iconify-icon icon="teenyicons:github-outline" class="icon"></iconify-icon> GitHub
-                </a>
+    <!-- Business Card Layer -->
+    <div id="business-card-layer" class="business-card-layer">
+        <div class="matrix-bg"></div>
+        <div class="business-card-container">
+            <div class="business-card">
+                <div class="card-header">
+                    <div class="terminal-bar">
+                        <div class="terminal-buttons">
+                            <span class="btn red"></span>
+                            <span class="btn yellow"></span>
+                            <span class="btn green"></span>
+                        </div>
+                        <div class="terminal-title">~/portfolio/business-card</div>
+                    </div>
+                </div>
+                
+                <div class="card-content">
+                    <div class="profile-section">
+                        <div class="profile-image">
+                            <img src="img/profile.jpg" alt="Wong Jun Keat" id="profile-img">
+                            <div class="scan-line"></div>
+                        </div>
+                        <div class="glitch-text">
+                            <h1 class="name" data-text="WONG JUN KEAT">WONG JUN KEAT</h1>
+                        </div>
+                    </div>
+                    
+                    <div class="role-section">
+                        <div class="typing-text">
+                            <span class="prompt">$</span>
+                            <span id="role-text"></span>
+                            <span class="cursor">|</span>
+                        </div>
+                    </div>
+                    
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <i class="fas fa-envelope"></i>
+                            <span>wongjushao@gmail.com</span>
+                        </div>
+                        <div class="info-item">
+                            <i class="fab fa-linkedin"></i>
+                            <span>linkedin.com/in/junkeatwong</span>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span>Kuala Lumpur, Malaysia</span>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-graduation-cap"></i>
+                            <span>42 School KL</span>
+                        </div>
+                    </div>
+                    
+                    <div class="skills-preview">
+                        <div class="skill-tags">
+                            <span class="tag">C/C++</span>
+                            <span class="tag">Python</span>
+                            <span class="tag">JavaScript</span>
+                            <span class="tag">Linux</span>
+                            <span class="tag">Docker</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-footer">
+                    <div class="slide-indicator">
+                        <i class="fas fa-chevron-up"></i>
+                        <span>Slide up to explore portfolio</span>
+                    </div>
+                </div>
             </div>
         </div>
-    </section>
+    </div>
 
-    <section id="Coding_Skills">
-        <div>
-            <h2>Coding Skills</h2>
-            <div class="skill">
-                <iconify-icon icon="fa-brands:java" class="icon"></iconify-icon>
-                <h3><span class="counter"> 85 </span><span>%</span></h3>
+    <!-- Main Portfolio Layer -->
+    <div id="portfolio-layer" class="portfolio-layer">
+        <!-- Left Sidebar Navigation -->
+        <nav class="sidebar-nav">
+            <div class="nav-brand">
+                <span class="brand-text">&lt;WJK/&gt;</span>
+                <div class="brand-subtitle">Portfolio</div>
             </div>
-            <div class="skill">
-                <iconify-icon icon="simple-icons:mysql" class="icon"></iconify-icon>
-                <h3><span class="counter"> 70 </span><span>%</span></h3>
-            </div>
-            <div class="skill">
-                <iconify-icon icon="akar-icons:php-fill" class="icon"></iconify-icon>
-                <h3><span class="counter"> 90 </span><span>%</span></h3>
-            </div>
-            <div class="skill">
-                <iconify-icon icon="teenyicons:c-solid" class="icon"></iconify-icon>
-                <h3><span class="counter"> 65 </span><span>%</span></h3>
-            </div>
-        </div>
-    </section>
 
-    <section id="contact">
-        <div>
-            <h2>Contact me</h2>
-            <div class="contact">
-                <iconify-icon icon="bi:phone" class="icon_conatact"></iconify-icon>
-                <a href="tel:+60168673415">+60-168673415</a>
-            </div>
-            <div class="contact">
-                <iconify-icon icon="ic:outline-email" class="icon_conatact"></iconify-icon>
-                <a href="mailto:wongjushao@gmail.com">wongjushao@gmail.com</a>
-            </div>
-        </div>
-    </section>
+            <ul class="nav-menu">
+                <li><a href="#home" class="nav-link active">
+                    <i class="fas fa-home"></i>
+                    <span>Home</span>
+                </a></li>
+                <li><a href="#projects" class="nav-link">
+                    <i class="fas fa-code"></i>
+                    <span>Projects</span>
+                </a></li>
+                <li><a href="#articles" class="nav-link">
+                    <i class="fas fa-newspaper"></i>
+                    <span>Articles</span>
+                </a></li>
+                <li><a href="#info" class="nav-link">
+                    <i class="fas fa-user"></i>
+                    <span>Info</span>
+                </a></li>
+                <li><a href="#contact" class="nav-link">
+                    <i class="fas fa-envelope"></i>
+                    <span>Contact</span>
+                </a></li>
+            </ul>
 
-    <footer>
-        &copy; 2023 Wong Jun Keat
-    </footer>
+            <div class="nav-footer">
+                <div class="social-links">
+                    <a href="https://github.com/wongjushao" target="_blank" title="GitHub">
+                        <i class="fab fa-github"></i>
+                    </a>
+                    <a href="https://linkedin.com/in/junkeatwong" target="_blank" title="LinkedIn">
+                        <i class="fab fa-linkedin"></i>
+                    </a>
+					<a href="https://medium.com/@wongjushao" target="_blank" title="Medium">
+						<i class="fab fa-medium"></i>
+					</a>
+                </div>
+                <div class="nav-status">
+                    <span class="status-dot"></span>
+                    <span>Available for work</span>
+                </div>
+            </div>
+
+            <div class="nav-toggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="content-wrapper">
+            <!-- Home Section -->
+            <section id="home" class="section active">
+                <div class="container">
+                    <div class="hero-content">
+                        <h1 class="hero-title">
+                            <span class="highlight">System</span> Developer &
+                            <span class="highlight">Security</span> Enthusiast
+                        </h1>
+                        <p class="hero-subtitle">
+                            Full-stack developer transitioning to cybersecurity through 42 School's intensive program.
+                            Passionate about low-level programming, system security, and ethical hacking.
+                        </p>
+                        <div class="hero-stats">
+                            <div class="stat">
+                                <span class="stat-number">3+</span>
+                                <span class="stat-label">Years Coding</span>
+                            </div>
+                            <div class="stat">
+                                <span class="stat-number">42</span>
+                                <span class="stat-label">School Student</span>
+                            </div>
+                            <div class="stat">
+                                <span class="stat-number">10+</span>
+                                <span class="stat-label">Projects</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Projects Section -->
+            <section id="projects" class="section">
+                <div class="container">
+                    <div class="projects-header">
+                        <h2 class="section-title">Featured Projects</h2>
+                        <button id="refresh-projects" class="refresh-btn" title="Refresh projects from GitHub">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </div>
+
+                    <!-- Loading State -->
+                    <div id="projects-loading" class="projects-loading">
+                        <div class="loading-spinner"></div>
+                        <p>Loading projects from GitHub...</p>
+                    </div>
+
+                    <!-- Error State -->
+                    <div id="projects-error" class="projects-error" style="display: none;">
+                        <div class="error-icon">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <h3>Unable to load projects</h3>
+                        <p>There was an issue connecting to GitHub. Please try again later.</p>
+                        <button id="retry-projects" class="retry-btn">
+                            <i class="fas fa-redo"></i> Retry
+                        </button>
+                    </div>
+
+                    <!-- Projects Grid -->
+                    <div id="projects-grid" class="projects-grid" style="display: none;">
+                        <!-- Dynamic content will be inserted here -->
+                    </div>
+
+                    <!-- GitHub Profile Link -->
+                    <div class="github-profile-link">
+                        <a href="https://github.com/wongjushao" target="_blank" class="view-all-projects">
+                            <i class="fab fa-github"></i>
+                            View all projects on GitHub
+                            <i class="fas fa-external-link-alt"></i>
+                        </a>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Articles Section -->
+            <section id="articles" class="section">
+                <div class="container">
+                    <div class="articles-header">
+                        <h2 class="section-title">Latest Articles</h2>
+                        <button id="refresh-articles" class="refresh-btn" title="Refresh articles from Medium">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </div>
+
+                    <!-- Loading State -->
+                    <div id="articles-loading" class="articles-loading">
+                        <div class="loading-spinner"></div>
+                        <p>Loading articles from Medium...</p>
+                    </div>
+
+                    <!-- Error State -->
+                    <div id="articles-error" class="articles-error" style="display: none;">
+                        <div class="error-icon">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <h3>Unable to load articles</h3>
+                        <p>There was an issue connecting to Medium. Please try again later.</p>
+                        <button id="retry-articles" class="retry-btn">
+                            <i class="fas fa-redo"></i> Retry
+                        </button>
+                    </div>
+
+                    <!-- Articles Grid -->
+                    <div id="articles-grid" class="articles-grid" style="display: none;">
+                        <!-- Dynamic content will be inserted here -->
+                    </div>
+
+                    <!-- Medium Profile Link -->
+                    <div class="medium-profile-link">
+                        <a href="https://medium.com/@wongjushao" target="_blank" class="view-all-articles">
+                            <i class="fab fa-medium"></i>
+                            View all articles on Medium
+                            <i class="fas fa-external-link-alt"></i>
+                        </a>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Info Section -->
+            <section id="info" class="section">
+                <div class="container">
+                    <h2 class="section-title">About Me</h2>
+                    <div class="info-content">
+                        <div class="info-text">
+                            <p>I'm a 23-year-old Malaysian developer currently pursuing intensive programming education at 42 School KL. My journey began in full-stack web development, but I'm now focusing on low-level programming and cybersecurity.</p>
+                            
+                            <h3>Current Focus</h3>
+                            <ul>
+                                <li>Low-level programming with C and Assembly</li>
+                                <li>System design and architecture</li>
+                                <li>Memory management and optimization</li>
+                                <li>Unix system programming</li>
+                            </ul>
+                            
+                            <h3>Languages</h3>
+                            <ul>
+                                <li>English, Chinese, Malay (Native)</li>
+                                <li>French (Basic, actively learning)</li>
+                            </ul>
+                        </div>
+                        <div class="skills-detailed">
+                            <h3>Technical Skills</h3>
+                            <div class="skill-category">
+                                <h4>Programming Languages</h4>
+                                <div class="skill-list">
+                                    <span>C</span>
+                                    <span>C++</span>
+                                    <span>Assembly</span>
+                                    <span>Python</span>
+                                    <span>JavaScript</span>
+                                    <span>TypeScript</span>
+                                    <span>Java</span>
+                                    <span>Bash</span>
+                                </div>
+                            </div>
+                            <div class="skill-category">
+                                <h4>Tools & Technologies</h4>
+                                <div class="skill-list">
+                                    <span>Docker</span>
+                                    <span>Git</span>
+                                    <span>Linux</span>
+                                    <span>PostgreSQL</span>
+                                    <span>MongoDB</span>
+                                    <span>React</span>
+                                    <span>Vue</span>
+                                    <span>FastAPI</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Contact Section -->
+            <section id="contact" class="section">
+                <div class="container">
+                    <h2 class="section-title">Get In Touch</h2>
+                    <div class="contact-content">
+                        <div class="contact-info">
+                            <div class="contact-item">
+                                <i class="fas fa-envelope"></i>
+                                <div>
+                                    <h4>Email</h4>
+                                    <p>wongjushao@gmail.com</p>
+                                </div>
+                            </div>
+                            <div class="contact-item">
+                                <i class="fab fa-linkedin"></i>
+                                <div>
+                                    <h4>LinkedIn</h4>
+                                    <p>linkedin.com/in/junkeatwong</p>
+                                </div>
+                            </div>
+                            <div class="contact-item">
+                                <i class="fab fa-github"></i>
+                                <div>
+                                    <h4>GitHub</h4>
+                                    <p>github.com/wongjunkeat</p>
+                                </div>
+                            </div>
+                            <div class="contact-item">
+                                <i class="fas fa-map-marker-alt"></i>
+                                <div>
+                                    <h4>Location</h4>
+                                    <p>Kuala Lumpur, Malaysia</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="contact-form">
+                            <form>
+                                <div class="form-group">
+                                    <input type="text" placeholder="Your Name" required>
+                                </div>
+                                <div class="form-group">
+                                    <input type="email" placeholder="Your Email" required>
+                                </div>
+                                <div class="form-group">
+                                    <textarea placeholder="Your Message" rows="5" required></textarea>
+                                </div>
+                                <button type="submit" class="submit-btn">Send Message</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            </div>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
 </body>
-
 </html>
