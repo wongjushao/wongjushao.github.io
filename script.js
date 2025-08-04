@@ -1253,6 +1253,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initialize certificate click functionality
     initializeCertificateClicks();
+
+    // Initialize contact form functionality
+    initializeContactForm();
 });
 
 // Info Section Functionality
@@ -1556,6 +1559,219 @@ function showCertificateNotification(message, type = 'info') {
             }
         }, 300);
     }, 3000);
+}
+
+// Contact Form Functionality
+function initializeContactForm() {
+    const form = document.getElementById('contact-form');
+    const nameInput = document.getElementById('contact-name');
+    const emailInput = document.getElementById('contact-email');
+    const subjectInput = document.getElementById('contact-subject');
+    const messageInput = document.getElementById('contact-message');
+    const submitBtn = form.querySelector('.submit-btn');
+    const feedback = document.getElementById('form-feedback');
+    const charCount = document.getElementById('char-count');
+
+    // Character counter for message
+    messageInput.addEventListener('input', () => {
+        const length = messageInput.value.length;
+        const maxLength = 1000;
+        charCount.textContent = length;
+
+        const charCountElement = charCount.parentElement;
+        charCountElement.classList.remove('warning', 'error');
+
+        if (length > maxLength * 0.8) {
+            charCountElement.classList.add('warning');
+        }
+        if (length > maxLength) {
+            charCountElement.classList.add('error');
+            messageInput.value = messageInput.value.substring(0, maxLength);
+            charCount.textContent = maxLength;
+        }
+    });
+
+    // Real-time validation
+    const inputs = [nameInput, emailInput, messageInput];
+    inputs.forEach(input => {
+        input.addEventListener('blur', () => validateField(input));
+        input.addEventListener('input', () => clearFieldError(input));
+    });
+
+    // Form submission
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        if (validateForm()) {
+            await submitForm();
+        }
+    });
+
+    function validateField(field) {
+        const value = field.value.trim();
+        const fieldName = field.name;
+        let isValid = true;
+        let errorMessage = '';
+
+        // Clear previous error
+        clearFieldError(field);
+
+        switch (fieldName) {
+            case 'name':
+                if (!value) {
+                    errorMessage = 'Name is required';
+                    isValid = false;
+                } else if (value.length < 2) {
+                    errorMessage = 'Name must be at least 2 characters';
+                    isValid = false;
+                } else if (!/^[a-zA-Z\s'-]+$/.test(value)) {
+                    errorMessage = 'Name contains invalid characters';
+                    isValid = false;
+                }
+                break;
+
+            case 'email':
+                if (!value) {
+                    errorMessage = 'Email is required';
+                    isValid = false;
+                } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+                    errorMessage = 'Please enter a valid email address';
+                    isValid = false;
+                }
+                break;
+
+            case 'message':
+                if (!value) {
+                    errorMessage = 'Message is required';
+                    isValid = false;
+                } else if (value.length < 10) {
+                    errorMessage = 'Message must be at least 10 characters';
+                    isValid = false;
+                } else if (value.length > 1000) {
+                    errorMessage = 'Message must be less than 1000 characters';
+                    isValid = false;
+                }
+                break;
+        }
+
+        if (!isValid) {
+            showFieldError(field, errorMessage);
+        }
+
+        return isValid;
+    }
+
+    function validateForm() {
+        let isValid = true;
+        inputs.forEach(input => {
+            if (!validateField(input)) {
+                isValid = false;
+            }
+        });
+        return isValid;
+    }
+
+    function showFieldError(field, message) {
+        field.classList.add('error');
+        const errorElement = document.getElementById(`${field.name}-error`);
+        if (errorElement) {
+            errorElement.textContent = message;
+            errorElement.classList.add('show');
+        }
+    }
+
+    function clearFieldError(field) {
+        field.classList.remove('error');
+        const errorElement = document.getElementById(`${field.name}-error`);
+        if (errorElement) {
+            errorElement.textContent = '';
+            errorElement.classList.remove('show');
+        }
+    }
+
+    async function submitForm() {
+        // Show loading state
+        submitBtn.classList.add('loading');
+        submitBtn.disabled = true;
+        hideFeedback();
+
+        try {
+            // Collect form data
+            const formData = {
+                name: nameInput.value.trim(),
+                email: emailInput.value.trim(),
+                subject: subjectInput.value.trim() || 'Contact Form Submission',
+                message: messageInput.value.trim()
+            };
+
+            // Simulate form submission (replace with actual implementation)
+            await simulateFormSubmission(formData);
+
+            // Show success message
+            showFeedback('Thank you for your message! I\'ll get back to you as soon as possible.', 'success');
+
+            // Reset form
+            form.reset();
+            charCount.textContent = '0';
+
+        } catch (error) {
+            console.error('Form submission error:', error);
+            showFeedback('Sorry, there was an error sending your message. Please try again or contact me directly.', 'error');
+        } finally {
+            // Hide loading state
+            submitBtn.classList.remove('loading');
+            submitBtn.disabled = false;
+        }
+    }
+
+    async function simulateFormSubmission(formData) {
+        // This is a placeholder function. Replace with actual form submission logic
+        // Options include:
+        // 1. EmailJS service
+        // 2. Netlify Forms
+        // 3. Custom backend API
+        // 4. Mailto link (fallback)
+
+        return new Promise((resolve, reject) => {
+            setTimeout(() => {
+                // Simulate success (90% of the time)
+                if (Math.random() > 0.1) {
+                    console.log('Form submitted:', formData);
+                    resolve();
+                } else {
+                    reject(new Error('Simulated submission error'));
+                }
+            }, 2000);
+        });
+    }
+
+    function showFeedback(message, type) {
+        feedback.textContent = message;
+        feedback.className = `form-feedback ${type} show`;
+
+        // Auto-hide after 5 seconds for success messages
+        if (type === 'success') {
+            setTimeout(() => {
+                hideFeedback();
+            }, 5000);
+        }
+    }
+
+    function hideFeedback() {
+        feedback.classList.remove('show');
+    }
+
+    // Alternative mailto fallback function
+    function openMailto(formData) {
+        const subject = encodeURIComponent(formData.subject);
+        const body = encodeURIComponent(
+            `Name: ${formData.name}\n` +
+            `Email: ${formData.email}\n\n` +
+            `Message:\n${formData.message}`
+        );
+        const mailtoLink = `mailto:wongjushao@gmail.com?subject=${subject}&body=${body}`;
+        window.location.href = mailtoLink;
+    }
 }
 
 // Add CSS class for loaded state
