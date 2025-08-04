@@ -134,13 +134,41 @@ navLinks.forEach(link => {
         e.preventDefault();
         const targetId = link.getAttribute('href').substring(1);
         showSection(targetId);
-        
+
         // Close mobile menu if open
         sidebarNav.classList.remove('active');
         navToggle.classList.remove('active');
         mobileOverlay.classList.remove('active');
     });
 });
+
+// CTA Button and Navigation Card handlers
+function initializeCTAButtons() {
+    // Handle CTA buttons and navigation cards
+    const navigationElements = document.querySelectorAll('.cta-button, .nav-card');
+
+    navigationElements.forEach(element => {
+        element.addEventListener('click', (e) => {
+            e.preventDefault();
+            const href = element.getAttribute('href');
+
+            // Check if it's a valid internal link
+            if (href && href.startsWith('#')) {
+                const targetId = href.substring(1);
+
+                // Navigate to the target section
+                showSection(targetId);
+
+                // Close mobile menu if open
+                sidebarNav.classList.remove('active');
+                navToggle.classList.remove('active');
+                mobileOverlay.classList.remove('active');
+
+                console.log(`Navigating to section: ${targetId}`);
+            }
+        });
+    });
+}
 
 // Mobile navigation toggle
 navToggle.addEventListener('click', () => {
@@ -1213,7 +1241,322 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Add loading animation
     document.body.classList.add('loaded');
+
+    // Initialize Info section functionality
+    initializeInfoSection();
+
+    // Initialize Home block navigation
+    initializeHomeBlockNavigation();
+
+    // Initialize CTA button navigation
+    initializeCTAButtons();
+
+    // Initialize certificate click functionality
+    initializeCertificateClicks();
 });
+
+// Info Section Functionality
+function initializeInfoSection() {
+    // Tab functionality
+    const tabButtons = document.querySelectorAll('.tab-button');
+    const tabPanels = document.querySelectorAll('.tab-panel');
+
+    tabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const targetTab = button.getAttribute('data-tab');
+
+            // Remove active class from all buttons and panels
+            tabButtons.forEach(btn => btn.classList.remove('active'));
+            tabPanels.forEach(panel => panel.classList.remove('active'));
+
+            // Add active class to clicked button and corresponding panel
+            button.classList.add('active');
+            document.getElementById(`${targetTab}-panel`).classList.add('active');
+        });
+    });
+
+    // Collapsible sections functionality
+    const collapsibleHeaders = document.querySelectorAll('.collapsible-header');
+
+    collapsibleHeaders.forEach(header => {
+        header.addEventListener('click', () => {
+            const content = header.nextElementSibling;
+            const isActive = header.classList.contains('active');
+
+            // Close all other collapsible sections
+            collapsibleHeaders.forEach(h => {
+                h.classList.remove('active');
+                h.nextElementSibling.classList.remove('active');
+            });
+
+            // Toggle current section
+            if (!isActive) {
+                header.classList.add('active');
+                content.classList.add('active');
+            }
+        });
+    });
+}
+
+// Home Block Navigation System
+function initializeHomeBlockNavigation() {
+    const blocks = document.querySelectorAll('.home-block');
+
+    let currentBlock = 0;
+    let isTransitioning = false;
+    let touchStartY = 0;
+    let touchEndY = 0;
+
+    // Initialize
+    updateBlockDisplay();
+
+    // Keyboard navigation
+    document.addEventListener('keydown', (e) => {
+        if (document.querySelector('#home').classList.contains('active')) {
+            if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+                e.preventDefault();
+                if (!isTransitioning && currentBlock > 0) {
+                    goToBlock(currentBlock - 1);
+                }
+            } else if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+                e.preventDefault();
+                if (!isTransitioning && currentBlock < blocks.length - 1) {
+                    goToBlock(currentBlock + 1);
+                }
+            }
+        }
+    });
+
+    // Mouse wheel navigation
+    let wheelTimeout;
+    document.addEventListener('wheel', (e) => {
+        if (document.querySelector('#home').classList.contains('active')) {
+            e.preventDefault();
+
+            clearTimeout(wheelTimeout);
+            wheelTimeout = setTimeout(() => {
+                if (!isTransitioning) {
+                    if (e.deltaY > 0 && currentBlock < blocks.length - 1) {
+                        goToBlock(currentBlock + 1);
+                    } else if (e.deltaY < 0 && currentBlock > 0) {
+                        goToBlock(currentBlock - 1);
+                    }
+                }
+            }, 50);
+        }
+    }, { passive: false });
+
+    // Touch navigation
+    document.addEventListener('touchstart', (e) => {
+        if (document.querySelector('#home').classList.contains('active')) {
+            touchStartY = e.touches[0].clientY;
+        }
+    });
+
+    document.addEventListener('touchend', (e) => {
+        if (document.querySelector('#home').classList.contains('active')) {
+            touchEndY = e.changedTouches[0].clientY;
+            handleSwipe();
+        }
+    });
+
+    function handleSwipe() {
+        const swipeThreshold = 50;
+        const swipeDistance = touchStartY - touchEndY;
+
+        if (Math.abs(swipeDistance) > swipeThreshold && !isTransitioning) {
+            if (swipeDistance > 0 && currentBlock < blocks.length - 1) {
+                // Swipe up - next block
+                goToBlock(currentBlock + 1);
+            } else if (swipeDistance < 0 && currentBlock > 0) {
+                // Swipe down - previous block
+                goToBlock(currentBlock - 1);
+            }
+        }
+    }
+
+    function goToBlock(index) {
+        if (index === currentBlock || isTransitioning) return;
+
+        isTransitioning = true;
+        const previousBlock = currentBlock;
+        currentBlock = index;
+
+        // Add transition classes
+        blocks[previousBlock].classList.add(index > previousBlock ? 'prev' : 'next');
+
+        setTimeout(() => {
+            updateBlockDisplay();
+            updateNavigationState();
+
+            // Clean up transition classes
+            blocks.forEach(block => {
+                block.classList.remove('prev', 'next');
+            });
+
+            isTransitioning = false;
+        }, 100);
+    }
+
+    function updateBlockDisplay() {
+        blocks.forEach((block, index) => {
+            block.classList.toggle('active', index === currentBlock);
+        });
+    }
+
+    function updateNavigationState() {
+        // Navigation state is now handled purely through block display
+        // No visual indicators to update
+    }
+
+    // Auto-advance on first visit (optional)
+    let hasInteracted = false;
+    const autoAdvanceTimer = setTimeout(() => {
+        if (!hasInteracted && currentBlock === 0) {
+            goToBlock(1);
+        }
+    }, 5000);
+
+    // Cancel auto-advance on any interaction
+    const cancelAutoAdvance = () => {
+        hasInteracted = true;
+        clearTimeout(autoAdvanceTimer);
+    };
+
+    document.addEventListener('keydown', cancelAutoAdvance);
+    document.addEventListener('wheel', cancelAutoAdvance);
+    document.addEventListener('touchstart', cancelAutoAdvance);
+}
+
+// Certificate Click Functionality
+function initializeCertificateClicks() {
+    // PDF file mapping for certificates
+    const certificatePDFMap = {
+        'CompTIA IT Fundamentals+ (ITF+)': 'certificate/CompTIA IT Fundamentals (ITF+) Certification certificate.pdf',
+        'Cisco Introduction to Cybersecurity': 'certificate/CCNA-_Introduction_to_Networks_certificate_wongjushao-gmail-com_8f5c1e5f-9fe8-4d37-9e32-9de7776018e5.pdf',
+        'Cisco IT Essentials': 'certificate/IT_Essentials_certificate_wongjushao-gmail-com_0fdf1259-4f4e-4822-9dd9-0060ea89bf0c.pdf',
+        'DCS Certificate': 'certificate/dcs-certificate.pdf',
+        'BSN Certificate': 'certificate/bsn-certificate.pdf'
+    };
+
+    const certItems = document.querySelectorAll('.cert-compact-item');
+
+    certItems.forEach(item => {
+        const certName = item.querySelector('span').textContent.trim();
+        const pdfPath = certificatePDFMap[certName];
+
+        if (pdfPath) {
+            // Add click handler
+            item.addEventListener('click', (e) => {
+                e.preventDefault();
+                openCertificatePDF(pdfPath, certName);
+            });
+
+            // Add keyboard accessibility
+            item.setAttribute('tabindex', '0');
+            item.setAttribute('role', 'button');
+            item.setAttribute('aria-label', `View ${certName} certificate`);
+
+            item.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    openCertificatePDF(pdfPath, certName);
+                }
+            });
+
+            // Add visual indicator that it's clickable
+            item.style.cursor = 'pointer';
+        }
+    });
+}
+
+function openCertificatePDF(pdfPath, certName) {
+    try {
+        // Create a temporary link to test if file exists
+        const testLink = document.createElement('a');
+        testLink.href = pdfPath;
+
+        // Try to open the PDF in a new tab
+        const newWindow = window.open(pdfPath, '_blank');
+
+        if (newWindow) {
+            console.log(`Opening certificate: ${certName}`);
+
+            // Add visual feedback
+            showCertificateNotification(`Opening ${certName}...`, 'success');
+
+            // Check if the window was blocked
+            setTimeout(() => {
+                if (newWindow.closed) {
+                    showCertificateNotification('Please allow pop-ups to view certificates', 'warning');
+                }
+            }, 1000);
+        } else {
+            // Fallback: try to download the file
+            const downloadLink = document.createElement('a');
+            downloadLink.href = pdfPath;
+            downloadLink.download = `${certName.replace(/[^a-zA-Z0-9]/g, '-')}.pdf`;
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            document.body.removeChild(downloadLink);
+
+            showCertificateNotification(`Downloading ${certName}...`, 'info');
+        }
+    } catch (error) {
+        console.error('Error opening certificate:', error);
+        showCertificateNotification(`Could not open ${certName}. File may not be available.`, 'error');
+    }
+}
+
+function showCertificateNotification(message, type = 'info') {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `certificate-notification ${type}`;
+    notification.textContent = message;
+
+    // Style the notification
+    notification.style.cssText = `
+        position: fixed;
+        top: 2rem;
+        right: 2rem;
+        background: ${type === 'success' ? 'rgba(0, 255, 65, 0.1)' :
+                    type === 'warning' ? 'rgba(255, 193, 7, 0.1)' :
+                    type === 'error' ? 'rgba(220, 53, 69, 0.1)' : 'rgba(0, 123, 255, 0.1)'};
+        border: 1px solid ${type === 'success' ? 'var(--accent-color)' :
+                           type === 'warning' ? '#ffc107' :
+                           type === 'error' ? '#dc3545' : '#007bff'};
+        color: ${type === 'success' ? 'var(--accent-color)' :
+                 type === 'warning' ? '#ffc107' :
+                 type === 'error' ? '#dc3545' : '#007bff'};
+        padding: 1rem 1.5rem;
+        border-radius: 8px;
+        backdrop-filter: blur(10px);
+        z-index: 10000;
+        font-size: 0.9rem;
+        font-weight: 500;
+        max-width: 300px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        transform: translateX(100%);
+        transition: transform 0.3s ease;
+    `;
+
+    document.body.appendChild(notification);
+
+    // Animate in
+    setTimeout(() => {
+        notification.style.transform = 'translateX(0)';
+    }, 100);
+
+    // Remove after 3 seconds
+    setTimeout(() => {
+        notification.style.transform = 'translateX(100%)';
+        setTimeout(() => {
+            if (notification.parentNode) {
+                document.body.removeChild(notification);
+            }
+        }, 300);
+    }, 3000);
+}
 
 // Add CSS class for loaded state
 const style = document.createElement('style');
