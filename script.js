@@ -6,6 +6,8 @@ const navLinks = document.querySelectorAll('.nav-link');
 const sections = document.querySelectorAll('.section');
 const navToggle = document.querySelector('.nav-toggle');
 const sidebarNav = document.querySelector('.sidebar-nav');
+const mobileHamburger = document.querySelector('.mobile-hamburger');
+const mobileOverlay = document.querySelector('.mobile-overlay');
 const roleText = document.getElementById('role-text');
 
 // Role typing animation
@@ -136,6 +138,7 @@ navLinks.forEach(link => {
         // Close mobile menu if open
         sidebarNav.classList.remove('active');
         navToggle.classList.remove('active');
+        mobileOverlay.classList.remove('active');
     });
 });
 
@@ -143,16 +146,44 @@ navLinks.forEach(link => {
 navToggle.addEventListener('click', () => {
     sidebarNav.classList.toggle('active');
     navToggle.classList.toggle('active');
+    mobileOverlay.classList.toggle('active');
+});
+
+// Keyboard accessibility for hamburger menu
+navToggle.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        sidebarNav.classList.toggle('active');
+        navToggle.classList.toggle('active');
+        mobileOverlay.classList.toggle('active');
+    }
+});
+
+// Close sidebar with Escape key
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && sidebarNav.classList.contains('active')) {
+        sidebarNav.classList.remove('active');
+        navToggle.classList.remove('active');
+        mobileOverlay.classList.remove('active');
+    }
 });
 
 // Close sidebar when clicking outside on mobile
 document.addEventListener('click', (e) => {
     if (window.innerWidth <= 768) {
-        if (!sidebarNav.contains(e.target) && !navToggle.contains(e.target)) {
+        if (!sidebarNav.contains(e.target) && !mobileHamburger.contains(e.target)) {
             sidebarNav.classList.remove('active');
             navToggle.classList.remove('active');
+            mobileOverlay.classList.remove('active');
         }
     }
+});
+
+// Close sidebar when clicking on overlay
+mobileOverlay.addEventListener('click', () => {
+    sidebarNav.classList.remove('active');
+    navToggle.classList.remove('active');
+    mobileOverlay.classList.remove('active');
 });
 
 // Smooth scrolling for sections
@@ -367,6 +398,19 @@ const fallbackRepos = [
         created_at: '2023-03-01T00:00:00Z',
         updated_at: '2023-12-01T00:00:00Z',
         size: 256,
+        fork: false,
+        homepage: null
+    },
+    {
+        name: 'this-is-a-very-long-project-name-that-should-definitely-trigger-the-scrolling-animation-feature',
+        description: 'Test project with an extremely long name to verify the text scrolling animation functionality',
+        html_url: `https://github.com/${GITHUB_USERNAME}/long-project-name-test`,
+        language: 'JavaScript',
+        stargazers_count: 5,
+        forks_count: 2,
+        created_at: '2023-04-01T00:00:00Z',
+        updated_at: '2023-12-01T00:00:00Z',
+        size: 128,
         fork: false,
         homepage: null
     }
@@ -850,7 +894,48 @@ function displayProjects(repos) {
         const projectCard = createProjectCard(repo);
         gridElement.appendChild(projectCard);
     });
+
+    // Setup title animations after all cards are added to DOM and rendered
+    // Use requestAnimationFrame to ensure DOM is fully rendered
+    requestAnimationFrame(() => {
+        setTimeout(() => {
+            const cards = gridElement.querySelectorAll('.project-card');
+            console.log('Setting up animations for', cards.length, 'cards');
+            cards.forEach((card, index) => {
+                console.log(`Setting up animation for card ${index + 1}`);
+                setupTitleAnimation(card);
+            });
+        }, 200); // Increased delay to ensure layout is complete
+    });
 }
+
+// Handle window resize to update project cards
+let resizeTimeout;
+window.addEventListener('resize', () => {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(() => {
+        // Recalculate title animations on resize
+        const gridElement = document.getElementById('projects-grid');
+        if (gridElement && gridElement.children.length > 0) {
+            const cards = gridElement.querySelectorAll('.project-card');
+            cards.forEach(card => {
+                // Reset existing animations
+                const titleText = card.querySelector('.project-title-text');
+                const titleElement = card.querySelector('.project-title');
+
+                if (titleText && titleElement) {
+                    titleText.classList.remove('scroll-animation');
+                    titleElement.classList.remove('overflowing');
+                    titleText.style.removeProperty('--scroll-distance');
+                    titleText.style.removeProperty('--animation-duration');
+                }
+
+                // Recalculate animation
+                setupTitleAnimation(card);
+            });
+        }
+    }, 250);
+});
 
 function createProjectCard(repo) {
     const card = document.createElement('div');
@@ -871,15 +956,34 @@ function createProjectCard(repo) {
     // Create description with fallback
     const description = repo.description || 'No description available for this repository.';
 
+    // Determine primary link (prioritize GitHub, fallback to homepage)
+    const primaryLink = repo.html_url;
+    const hasDemo = repo.homepage && repo.homepage !== repo.html_url;
+
+    // Add mobile-specific attributes for clickable cards
+    if (window.innerWidth <= 768) {
+        card.setAttribute('role', 'button');
+        card.setAttribute('tabindex', '0');
+        card.setAttribute('aria-label', `View ${repo.name} project on GitHub`);
+        card.classList.add('mobile-clickable');
+        card.dataset.url = primaryLink;
+        card.dataset.hasDemo = hasDemo;
+        card.dataset.demoUrl = repo.homepage || '';
+    }
+
     card.innerHTML = `
         <div class="project-header">
             <div class="project-title-row">
-                <h3>${repo.name}</h3>
+                <div class="project-title-container">
+                    <h3 class="project-title" title="${repo.name}" aria-label="${repo.name}">
+                        <span class="project-title-text">${repo.name}</span>
+                    </h3>
+                </div>
                 <div class="project-links">
                     <a href="${repo.html_url}" target="_blank" class="github-link" title="View on GitHub">
                         <i class="fab fa-github"></i>
                     </a>
-                    ${repo.homepage ? `<a href="${repo.homepage}" target="_blank" class="demo-link" title="Live Demo">
+                    ${hasDemo ? `<a href="${repo.homepage}" target="_blank" class="demo-link" title="Live Demo">
                         <i class="fas fa-external-link-alt"></i>
                     </a>` : ''}
                 </div>
@@ -906,9 +1010,123 @@ function createProjectCard(repo) {
         <div class="project-dates">
             Created: ${createdDate} • Updated: ${updatedDate}
         </div>
+        ${window.innerWidth <= 768 && hasDemo ? `
+            <div class="mobile-card-indicator">
+                <i class="fab fa-github"></i>
+                <span>Tap to view on GitHub</span>
+                ${hasDemo ? '<small>• Demo link available</small>' : ''}
+            </div>
+        ` : ''}
     `;
 
+    // Add mobile click handlers
+    if (window.innerWidth <= 768) {
+        addMobileCardHandlers(card);
+    }
+
     return card;
+}
+
+// Mobile card interaction handlers
+function addMobileCardHandlers(card) {
+    // Click handler
+    card.addEventListener('click', (e) => {
+        // Prevent if clicking on desktop links
+        if (e.target.closest('.github-link, .demo-link')) {
+            return;
+        }
+
+        const url = card.dataset.url;
+        if (url) {
+            window.open(url, '_blank');
+        }
+    });
+
+    // Keyboard handler
+    card.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            const url = card.dataset.url;
+            if (url) {
+                window.open(url, '_blank');
+            }
+        }
+    });
+
+    // Touch feedback
+    card.addEventListener('touchstart', () => {
+        card.classList.add('mobile-active');
+    });
+
+    card.addEventListener('touchend', () => {
+        setTimeout(() => {
+            card.classList.remove('mobile-active');
+        }, 150);
+    });
+
+    card.addEventListener('touchcancel', () => {
+        card.classList.remove('mobile-active');
+    });
+}
+
+// Setup title animation for long project names
+function setupTitleAnimation(card) {
+    const titleContainer = card.querySelector('.project-title-container');
+    const titleElement = card.querySelector('.project-title');
+    const titleText = card.querySelector('.project-title-text');
+
+    if (!titleContainer || !titleElement || !titleText) {
+        console.log('Missing title elements, skipping animation setup');
+        return;
+    }
+
+    // Ensure elements are visible and have dimensions
+    const containerWidth = titleContainer.offsetWidth;
+    const containerHeight = titleContainer.offsetHeight;
+
+    if (containerWidth === 0 || containerHeight === 0) {
+        console.log('Container has no dimensions, retrying in 100ms');
+        setTimeout(() => setupTitleAnimation(card), 100);
+        return;
+    }
+
+    // Reset any existing animation classes and styles
+    titleElement.classList.remove('overflowing');
+    titleText.classList.remove('scroll-animation');
+    titleText.style.removeProperty('--scroll-distance');
+    titleText.style.removeProperty('--animation-duration');
+    titleText.style.transform = ''; // Reset any existing transform
+
+    // Force a reflow to ensure accurate measurements
+    titleText.offsetWidth;
+
+    // Check if title overflows
+    const textWidth = titleText.scrollWidth;
+    const titleName = titleText.textContent.trim();
+
+    console.log(`Title "${titleName}": container=${containerWidth}px, text=${textWidth}px, overflows=${textWidth > containerWidth}`);
+
+    if (textWidth > containerWidth + 5) { // Add 5px buffer to avoid false positives
+        titleElement.classList.add('overflowing');
+
+        // Calculate animation duration based on text length
+        const overflowAmount = textWidth - containerWidth;
+        const animationDuration = Math.max(3, Math.min(8, overflowAmount / 15)); // 3-8 seconds
+
+        const scrollDistance = `-${overflowAmount + 30}px`; // Extra padding for smooth animation
+
+        titleText.style.setProperty('--scroll-distance', scrollDistance);
+        titleText.style.setProperty('--animation-duration', `${animationDuration}s`);
+
+        // Add animation class with a small delay to ensure styles are applied
+        requestAnimationFrame(() => {
+            titleText.classList.add('scroll-animation');
+        });
+
+        console.log(`Animation applied: duration=${animationDuration}s, distance=${scrollDistance}`);
+    } else {
+        console.log('Text fits in container, no animation needed');
+    }
 }
 
 function formatSize(sizeInKB) {
@@ -1002,18 +1220,6 @@ const style = document.createElement('style');
 style.textContent = `
     body:not(.loaded) * {
         animation-play-state: paused !important;
-    }
-
-    .nav-toggle.active span:nth-child(1) {
-        transform: rotate(45deg) translate(5px, 5px);
-    }
-
-    .nav-toggle.active span:nth-child(2) {
-        opacity: 0;
-    }
-
-    .nav-toggle.active span:nth-child(3) {
-        transform: rotate(-45deg) translate(7px, -6px);
     }
 `;
 document.head.appendChild(style);
