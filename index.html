@@ -9,7 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body>
+<body class="show-scrollbars">
     <!-- Business Card Layer -->
     <div id="business-card-layer" class="business-card-layer">
         <div class="matrix-bg"></div>
@@ -101,6 +101,10 @@
 
         <!-- Left Sidebar Navigation -->
         <nav class="sidebar-nav">
+            <!-- Desktop Sidebar Toggle -->
+            <button class="sidebar-toggle" aria-label="Collapse sidebar" aria-expanded="true" title="Toggle sidebar">
+                <i class="fas fa-chevron-left"></i>
+            </button>
             <div class="nav-brand">
                 <span class="brand-text">&lt;WJK/&gt;</span>
                 <div class="brand-subtitle">Portfolio</div>
@@ -154,6 +158,12 @@
             <!-- Home Section -->
             <section id="home" class="section active">
                 <div class="home-slider">
+                    <!-- Vertical Progress Slider -->
+                    <div class="home-progress" aria-hidden="true">
+                        <div class="home-progress-track">
+                            <div class="home-progress-thumb"></div>
+                        </div>
+                    </div>
                     <!-- Block Container -->
                     <div class="blocks-container">
                         <!-- Block 1: Hero Content -->
@@ -421,6 +431,7 @@
                                     <button class="tab-button active" data-tab="focus">Current Focus</button>
                                     <button class="tab-button" data-tab="practices">Engineering</button>
                                     <button class="tab-button" data-tab="languages">Languages</button>
+                                    <button class="tab-button" data-tab="achievements">Archivement</button>
                                 </div>
 
                                 <div class="tab-content">
@@ -450,6 +461,37 @@
                                         <ul>
                                             <li>English, Chinese, Malay (Native)</li>
                                             <li>French (Basic, actively learning)</li>
+                                        </ul>
+                                    </div>
+
+                                    <div class="tab-panel" id="achievements-panel">
+                                        <ul class="achievements-list">
+                                            <li>
+                                                <details>
+                                                    <summary>
+                                                        <i class="fas fa-trophy"></i>
+                                                        AmBank Hackathon 2025 — 1st Place (Individual)
+                                                    </summary>
+                                                    <div class="certificate-viewer">
+                                                        <object data="archivement/0_ambankHackerthon(2025).pdf" type="application/pdf" width="100%" height="500">
+                                                            <p>PDF preview not supported. <a href="archivement/0_ambankHackerthon(2025).pdf" target="_blank" rel="noopener">Open certificate</a></p>
+                                                        </object>
+                                                    </div>
+                                                </details>
+                                            </li>
+                                            <li>
+                                                <details>
+                                                    <summary>
+                                                        <i class="fas fa-trophy"></i>
+                                                        Alibaba GET Challenge 2025 — Finalist (Group)
+                                                    </summary>
+                                                    <div class="certificate-viewer">
+                                                        <object data="" type="application/pdf" width="100%" height="500">
+                                                            <p>PDF preview not supported. <a href="" target="_blank" rel="noopener">Open certificate</a></p>
+                                                        </object>
+                                                    </div>
+                                                </details>
+                                            </li>
                                         </ul>
                                     </div>
                                 </div>
@@ -546,34 +588,34 @@
                     <h2 class="section-title">Get In Touch</h2>
                     <div class="contact-content">
                         <div class="contact-info">
-                            <div class="contact-item">
+                            <a class="contact-item" href="mailto:wongjushao@gmail.com">
                                 <i class="fas fa-envelope"></i>
                                 <div>
                                     <h4>Email</h4>
                                     <p>wongjushao@gmail.com</p>
                                 </div>
-                            </div>
-                            <div class="contact-item">
+                            </a>
+                            <a class="contact-item" href="https://linkedin.com/in/junkeatwong" target="_blank" rel="noopener noreferrer">
                                 <i class="fab fa-linkedin"></i>
                                 <div>
                                     <h4>LinkedIn</h4>
                                     <p>linkedin.com/in/junkeatwong</p>
                                 </div>
-                            </div>
-                            <div class="contact-item">
+                            </a>
+                            <a class="contact-item" href="https://github.com/wongjushao" target="_blank" rel="noopener noreferrer">
                                 <i class="fab fa-github"></i>
                                 <div>
                                     <h4>GitHub</h4>
-                                    <p>github.com/wongjunkeat</p>
+                                    <p>github.com/wongjushao</p>
                                 </div>
-                            </div>
-                            <div class="contact-item">
+                            </a>
+                            <a class="contact-item" href="https://www.google.com/maps/search/?api=1&query=Kuala+Lumpur%2C+Malaysia" target="_blank" rel="noopener noreferrer">
                                 <i class="fas fa-map-marker-alt"></i>
                                 <div>
                                     <h4>Location</h4>
                                     <p>Kuala Lumpur, Malaysia</p>
                                 </div>
-                            </div>
+                            </a>
                         </div>
                         <div class="contact-form">
                             <div class="form-header">
@@ -584,7 +626,7 @@
                                 <p>I'd love to hear from you. Send me a message and I'll respond as soon as possible.</p>
                             </div>
 
-                            <form id="contact-form" class="contact-form-element">
+                            <form id="contact-form" class="contact-form-element" data-endpoint="https://formspree.io/f/mqagznlo">
                                 <div class="form-row">
                                     <div class="form-group">
                                         <label for="contact-name">Name *</label>
@@ -596,7 +638,7 @@
                                             required
                                             autocomplete="name"
                                         >
-                                        <span class="form-error" id="name-error"></span>
+                                        <!-- <span class="form-error" id="name-error"></span> -->
                                     </div>
                                     <div class="form-group">
                                         <label for="contact-email">Email *</label>
@@ -608,7 +650,7 @@
                                             required
                                             autocomplete="email"
                                         >
-                                        <span class="form-error" id="email-error"></span>
+                                        <!-- <span class="form-error" id="email-error"></span> -->
                                     </div>
                                 </div>
 

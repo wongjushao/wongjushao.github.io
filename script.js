@@ -9,6 +9,7 @@ const sidebarNav = document.querySelector('.sidebar-nav');
 const mobileHamburger = document.querySelector('.mobile-hamburger');
 const mobileOverlay = document.querySelector('.mobile-overlay');
 const roleText = document.getElementById('role-text');
+const sidebarToggleBtn = document.querySelector('.sidebar-toggle');
 
 // Role typing animation
 const roles = [
@@ -54,6 +55,11 @@ typeRole();
 let startY = 0;
 let currentY = 0;
 let isSliding = false;
+let wheelAccumulated = 0; // For two-finger (trackpad) scroll gesture
+let wheelTarget = 0; // target progress value (px)
+let wheelCurrent = 0; // smoothed current value (px)
+let wheelRafId = null;
+let lastWheelTime = 0;
 
 function handleSlideStart(e) {
     startY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
@@ -87,10 +93,57 @@ function handleSlideEnd() {
 }
 
 function slideToPortfolio() {
-    businessCardLayer.classList.add('slide-up');
-    setTimeout(() => {
+    // Helper to extract current translateY(px) from inline style
+    const parseCurrentTranslateY = () => {
+        const t = businessCardLayer.style.transform || '';
+        const m = t.match(/translateY\(([-\d.]+)px\)/);
+        if (m && m[1]) return parseFloat(m[1]);
+        return 0;
+    };
+
+    // Cancel any in-flight wheel smoothing
+    if (wheelRafId) {
+        cancelAnimationFrame(wheelRafId);
+        wheelRafId = null;
+    }
+
+    // Capture starting state
+    const startTranslate = parseCurrentTranslateY(); // negative or 0
+    const startOpacity = parseFloat(getComputedStyle(businessCardLayer).opacity) || 1;
+    const endTranslate = -businessCardLayer.getBoundingClientRect().height; // slide fully off-screen up
+
+    // Animate smoothly using Web Animations API
+    const duration = 650;
+    const easing = 'cubic-bezier(0.22, 1, 0.36, 1)'; // easeOutCubic-like
+
+    const anim = businessCardLayer.animate([
+        { transform: `translateY(${startTranslate}px)`, opacity: startOpacity },
+        { transform: `translateY(${endTranslate}px)`, opacity: 0 }
+    ], { duration, easing, fill: 'forwards' });
+
+    anim.onfinish = () => {
+        // Hide and cleanup inline styles
         businessCardLayer.style.display = 'none';
-    }, 800);
+        businessCardLayer.style.transform = '';
+        businessCardLayer.style.opacity = '';
+
+        // reset wheel state
+        wheelAccumulated = 0;
+        wheelTarget = 0;
+        wheelCurrent = 0;
+
+        // Ensure portfolio opens on Home section (main page)
+        showSection('home');
+        // Normalize URL to #home without adding a new history entry
+        if (window.location.hash !== '#home') {
+            try {
+                history.replaceState(null, '', '#home');
+            } catch (_) {
+                // Fallback for environments without History API
+                window.location.hash = 'home';
+            }
+        }
+    };
 }
 
 // Event listeners for slide functionality
@@ -106,8 +159,68 @@ businessCardLayer.addEventListener('touchend', handleSlideEnd);
 // Click on slide indicator
 slideIndicator.addEventListener('click', slideToPortfolio);
 
+// Two-finger (trackpad) scroll to slide up without clicking — with smoothing
+businessCardLayer.addEventListener('wheel', (e) => {
+    if (businessCardLayer.style.display === 'none') return;
+    // Prevent page/Home slider scroll and stop propagation to document listeners
+    e.preventDefault();
+    e.stopPropagation();
+
+    // Normalize delta (some devices have huge deltas)
+    const delta = Math.max(-60, Math.min(60, e.deltaY));
+    // Positive delta advances upwards gesture
+    wheelTarget = Math.max(0, wheelTarget + delta);
+    lastWheelTime = performance.now();
+
+    if (!wheelRafId) wheelRafId = requestAnimationFrame(wheelAnimate);
+}, { passive: false });
+
+function wheelAnimate() {
+    const maxPreview = 220; // px range to preview
+    const trigger = 170;    // threshold to trigger slide
+    const ease = 0.22;      // smoothing factor [0..1]
+
+    // Clamp target to preview range
+    if (wheelTarget > maxPreview) wheelTarget = maxPreview;
+
+    // Smoothly approach target
+    wheelCurrent += (wheelTarget - wheelCurrent) * ease;
+
+    // Apply transform/opacity once per frame (GPU-friendly)
+    const preview = Math.min(wheelCurrent, maxPreview);
+    const progress = preview / maxPreview;
+    businessCardLayer.style.transform = `translateY(${-preview}px)`;
+    businessCardLayer.style.opacity = String(1 - progress * 0.3);
+
+    // Decay back toward 0 if no wheel input recently (for a natural feel)
+    const now = performance.now();
+    if (now - lastWheelTime > 120) {
+        wheelTarget *= 0.9; // gentle decay
+        if (wheelTarget < 0.5) wheelTarget = 0;
+    }
+
+    // Trigger slide when near threshold
+    if (wheelCurrent >= trigger) {
+        slideToPortfolio();
+        return;
+    }
+
+    // Continue animating if we still have movement
+    if (Math.abs(wheelTarget - wheelCurrent) > 0.2 || wheelTarget > 0) {
+        wheelRafId = requestAnimationFrame(wheelAnimate);
+    } else {
+        // Snap back to rest
+        businessCardLayer.style.transform = 'translateY(0)';
+        businessCardLayer.style.opacity = '1';
+        wheelRafId = null;
+    }
+}
+
 // Navigation functionality
 function showSection(targetId) {
+    // Always reset scroll position to top when changing sections
+    scrollToTop();
+
     sections.forEach(section => {
         section.classList.remove('active');
     });
@@ -125,6 +238,23 @@ function showSection(targetId) {
     
     if (targetLink) {
         targetLink.classList.add('active');
+    }
+
+    // Toggle body class to ensure Home fits to viewport without overflow
+    if (targetId === 'home') {
+        document.body.classList.add('home-active');
+    // Show native scrollbars only on main (home) page
+    document.body.classList.add('show-scrollbars');
+    } else {
+        document.body.classList.remove('home-active');
+    // Hide native scrollbars for all other sections/pages
+    document.body.classList.remove('show-scrollbars');
+    }
+
+    // Initialize project title animations when Projects becomes visible
+    if (targetId === 'projects') {
+        // Delay slightly to allow layout to settle
+        setTimeout(() => setupProjectTitleAnimations(), 50);
     }
 }
 
@@ -225,6 +355,23 @@ function smoothScrollToSection(targetId) {
     }
 }
 
+// Helper: scroll page/main container to top
+function scrollToTop() {
+    // Try main content container first (if it scrolls)
+    const main = document.querySelector('.main-content');
+    if (main && typeof main.scrollTop === 'number') {
+        main.scrollTop = 0;
+    }
+    // Then ensure document is at top
+    // For cross-browser compatibility, set both elements
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+    // Safety: also request window scroll
+    if (typeof window.scrollTo === 'function') {
+        window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    }
+}
+
 // Keyboard navigation
 document.addEventListener('keydown', (e) => {
     if (e.key === 'ArrowUp' && businessCardLayer.style.display !== 'none') {
@@ -232,40 +379,7 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
-// Contact form handling
-const contactForm = document.querySelector('.contact-form form');
-if (contactForm) {
-    contactForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        
-        // Get form data
-        const name = contactForm.querySelector('input[type="text"]').value;
-        const email = contactForm.querySelector('input[type="email"]').value;
-        const message = contactForm.querySelector('textarea').value;
-        
-        // Simple validation
-        if (!name || !email || !message) {
-            alert('Please fill in all fields.');
-            return;
-        }
-        
-        // Simulate form submission
-        const submitBtn = contactForm.querySelector('.submit-btn');
-        const originalText = submitBtn.textContent;
-        
-        submitBtn.textContent = 'Sending...';
-        submitBtn.disabled = true;
-        
-        setTimeout(() => {
-            submitBtn.textContent = 'Message Sent!';
-            setTimeout(() => {
-                submitBtn.textContent = originalText;
-                submitBtn.disabled = false;
-                contactForm.reset();
-            }, 2000);
-        }, 1500);
-    });
-}
+// (removed old simple contact form handler to avoid duplicate submission)
 
 // Add glitch effect to profile image occasionally
 const profileImg = document.getElementById('profile-img');
@@ -923,17 +1037,11 @@ function displayProjects(repos) {
         gridElement.appendChild(projectCard);
     });
 
-    // Setup title animations after all cards are added to DOM and rendered
-    // Use requestAnimationFrame to ensure DOM is fully rendered
+    // Defer title animations until layout is ready; guard for hidden section
     requestAnimationFrame(() => {
         setTimeout(() => {
-            const cards = gridElement.querySelectorAll('.project-card');
-            console.log('Setting up animations for', cards.length, 'cards');
-            cards.forEach((card, index) => {
-                console.log(`Setting up animation for card ${index + 1}`);
-                setupTitleAnimation(card);
-            });
-        }, 200); // Increased delay to ensure layout is complete
+            setupProjectTitleAnimations();
+        }, 200);
     });
 }
 
@@ -942,28 +1050,32 @@ let resizeTimeout;
 window.addEventListener('resize', () => {
     clearTimeout(resizeTimeout);
     resizeTimeout = setTimeout(() => {
-        // Recalculate title animations on resize
-        const gridElement = document.getElementById('projects-grid');
-        if (gridElement && gridElement.children.length > 0) {
-            const cards = gridElement.querySelectorAll('.project-card');
-            cards.forEach(card => {
-                // Reset existing animations
-                const titleText = card.querySelector('.project-title-text');
-                const titleElement = card.querySelector('.project-title');
-
-                if (titleText && titleElement) {
-                    titleText.classList.remove('scroll-animation');
-                    titleElement.classList.remove('overflowing');
-                    titleText.style.removeProperty('--scroll-distance');
-                    titleText.style.removeProperty('--animation-duration');
-                }
-
-                // Recalculate animation
-                setupTitleAnimation(card);
-            });
-        }
+        setupProjectTitleAnimations();
     }, 250);
 });
+
+// Recompute title animations if Projects section is visible
+function setupProjectTitleAnimations() {
+    const projectsSection = document.getElementById('projects');
+    if (!projectsSection || !projectsSection.classList.contains('active')) return;
+
+    const gridElement = document.getElementById('projects-grid');
+    if (!gridElement || gridElement.children.length === 0) return;
+
+    const cards = gridElement.querySelectorAll('.project-card');
+    cards.forEach(card => {
+        const titleText = card.querySelector('.project-title-text');
+        const titleElement = card.querySelector('.project-title');
+        if (titleText && titleElement) {
+            titleText.classList.remove('scroll-animation');
+            titleElement.classList.remove('overflowing');
+            titleText.style.removeProperty('--scroll-distance');
+            titleText.style.removeProperty('--animation-duration');
+            titleText.style.transform = '';
+        }
+        setupTitleAnimation(card);
+    });
+}
 
 function createProjectCard(repo) {
     const card = document.createElement('div');
@@ -1103,20 +1215,13 @@ function setupTitleAnimation(card) {
     const titleElement = card.querySelector('.project-title');
     const titleText = card.querySelector('.project-title-text');
 
-    if (!titleContainer || !titleElement || !titleText) {
-        console.log('Missing title elements, skipping animation setup');
-        return;
-    }
+    if (!titleContainer || !titleElement || !titleText) return;
 
     // Ensure elements are visible and have dimensions
     const containerWidth = titleContainer.offsetWidth;
     const containerHeight = titleContainer.offsetHeight;
 
-    if (containerWidth === 0 || containerHeight === 0) {
-        console.log('Container has no dimensions, retrying in 100ms');
-        setTimeout(() => setupTitleAnimation(card), 100);
-        return;
-    }
+    if (containerWidth === 0 || containerHeight === 0) return; // skip while hidden
 
     // Reset any existing animation classes and styles
     titleElement.classList.remove('overflowing');
@@ -1130,9 +1235,7 @@ function setupTitleAnimation(card) {
 
     // Check if title overflows
     const textWidth = titleText.scrollWidth;
-    const titleName = titleText.textContent.trim();
-
-    console.log(`Title "${titleName}": container=${containerWidth}px, text=${textWidth}px, overflows=${textWidth > containerWidth}`);
+    // const titleName = titleText.textContent.trim();
 
     if (textWidth > containerWidth + 5) { // Add 5px buffer to avoid false positives
         titleElement.classList.add('overflowing');
@@ -1151,9 +1254,6 @@ function setupTitleAnimation(card) {
             titleText.classList.add('scroll-animation');
         });
 
-        console.log(`Animation applied: duration=${animationDuration}s, distance=${scrollDistance}`);
-    } else {
-        console.log('Text fits in container, no animation needed');
     }
 }
 
@@ -1230,8 +1330,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Initialize the application
 document.addEventListener('DOMContentLoaded', () => {
-    // Show home section by default
-    showSection('home');
+    // Show section based on URL hash if present, otherwise Home
+    const hash = window.location.hash ? window.location.hash.slice(1) : '';
+    const initialTarget = hash && document.getElementById(hash) ? hash : 'home';
+    showSection(initialTarget);
 
     // Load GitHub projects
     fetchGitHubRepos();
@@ -1256,6 +1358,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initialize contact form functionality
     initializeContactForm();
+
+    // Initialize desktop sidebar toggle
+    initializeSidebarToggle();
+
+    // Harden: disable selection and copy/cut/paste interactions
+    initializeAntiCopyGuards();
 });
 
 // Info Section Functionality
@@ -1304,14 +1412,20 @@ function initializeInfoSection() {
 // Home Block Navigation System
 function initializeHomeBlockNavigation() {
     const blocks = document.querySelectorAll('.home-block');
+    const progressThumb = document.querySelector('.home-progress-thumb');
+    const progressTrack = document.querySelector('.home-progress-track');
+    const homeSlider = document.querySelector('.home-slider');
 
     let currentBlock = 0;
     let isTransitioning = false;
     let touchStartY = 0;
     let touchEndY = 0;
+    let lastBlockTransitionAt = 0;
+    const blockCooldownMs = 100; // 0.1s cooldown between block changes
 
     // Initialize
     updateBlockDisplay();
+    updateProgress();
 
     // Keyboard navigation
     document.addEventListener('keydown', (e) => {
@@ -1330,9 +1444,14 @@ function initializeHomeBlockNavigation() {
         }
     });
 
+    // Helper: overlay visible check
+    const isOverlayVisible = () => businessCardLayer && businessCardLayer.style.display !== 'none';
+
     // Mouse wheel navigation
     let wheelTimeout;
     document.addEventListener('wheel', (e) => {
+        // Ignore while business card overlay is visible
+        if (isOverlayVisible()) return;
         if (document.querySelector('#home').classList.contains('active')) {
             e.preventDefault();
 
@@ -1351,12 +1470,16 @@ function initializeHomeBlockNavigation() {
 
     // Touch navigation
     document.addEventListener('touchstart', (e) => {
+        // Ignore while business card overlay is visible
+        if (isOverlayVisible()) return;
         if (document.querySelector('#home').classList.contains('active')) {
             touchStartY = e.touches[0].clientY;
         }
     });
 
     document.addEventListener('touchend', (e) => {
+        // Ignore while business card overlay is visible
+        if (isOverlayVisible()) return;
         if (document.querySelector('#home').classList.contains('active')) {
             touchEndY = e.changedTouches[0].clientY;
             handleSwipe();
@@ -1379,9 +1502,12 @@ function initializeHomeBlockNavigation() {
     }
 
     function goToBlock(index) {
+        const now = performance.now();
         if (index === currentBlock || isTransitioning) return;
+        if (now - lastBlockTransitionAt < blockCooldownMs) return; // enforce cooldown
 
         isTransitioning = true;
+        lastBlockTransitionAt = now;
         const previousBlock = currentBlock;
         currentBlock = index;
 
@@ -1391,6 +1517,7 @@ function initializeHomeBlockNavigation() {
         setTimeout(() => {
             updateBlockDisplay();
             updateNavigationState();
+            updateProgress();
 
             // Clean up transition classes
             blocks.forEach(block => {
@@ -1412,6 +1539,19 @@ function initializeHomeBlockNavigation() {
         // No visual indicators to update
     }
 
+    function updateProgress() {
+        if (!progressThumb || (!progressTrack && !homeSlider) || blocks.length <= 1) return;
+        // Use slider height as fallback if track has zero width/size
+        const trackRect = (progressTrack && progressTrack.getBoundingClientRect().height > 0)
+            ? progressTrack.getBoundingClientRect()
+            : homeSlider.getBoundingClientRect();
+        const thumbRect = progressThumb.getBoundingClientRect();
+        const maxTravel = Math.max(0, trackRect.height - thumbRect.height);
+        const ratio = currentBlock / (blocks.length - 1);
+        const topPx = Math.round(ratio * maxTravel);
+        progressThumb.style.top = `${topPx}px`;
+    }
+
     // Auto-advance on first visit (optional)
     let hasInteracted = false;
     const autoAdvanceTimer = setTimeout(() => {
@@ -1429,6 +1569,12 @@ function initializeHomeBlockNavigation() {
     document.addEventListener('keydown', cancelAutoAdvance);
     document.addEventListener('wheel', cancelAutoAdvance);
     document.addEventListener('touchstart', cancelAutoAdvance);
+
+    // Recompute progress on resize/orientation changes
+    window.addEventListener('resize', () => {
+        // Slight delay to allow layout settle
+        setTimeout(updateProgress, 50);
+    });
 }
 
 // Certificate Click Functionality
@@ -1695,54 +1841,75 @@ function initializeContactForm() {
         submitBtn.disabled = true;
         hideFeedback();
 
+        // Collect form data
+        const formData = {
+            name: nameInput.value.trim(),
+            email: emailInput.value.trim(),
+            subject: subjectInput.value.trim() || 'Contact Form Submission',
+            message: messageInput.value.trim()
+        };
+
+        const endpoint = form.getAttribute('data-endpoint');
+
         try {
-            // Collect form data
-            const formData = {
-                name: nameInput.value.trim(),
-                email: emailInput.value.trim(),
-                subject: subjectInput.value.trim() || 'Contact Form Submission',
-                message: messageInput.value.trim()
-            };
+            // If endpoint is missing or still placeholder, use mailto fallback
+            if (!endpoint || endpoint.includes('/yourid')) {
+                openMailto(formData);
+                showFeedback('Contact form not yet configured. Opening your email client...', 'info');
+            } else if (endpoint && endpoint.startsWith('https://')) {
+                // Prefer JSON; Formspree accepts either JSON or form-encoded
+                const resp = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name: formData.name,
+                        email: formData.email,
+                        subject: formData.subject,
+                        message: formData.message
+                    })
+                });
 
-            // Simulate form submission (replace with actual implementation)
-            await simulateFormSubmission(formData);
+                if (!resp.ok) {
+                    // Try to parse error from Formspree response
+                    let errText = 'Failed to send message';
+                    try {
+                        const data = await resp.json();
+                        if (data && data.errors && data.errors.length) {
+                            errText = data.errors.map(e => e.message).join(', ');
+                        }
+                    } catch (_) { /* ignore json parse errors */ }
+                    // If form not found, provide helpful fallback
+                    if (resp.status === 404) {
+                        showFeedback('Contact form endpoint not found. Opening your email client...', 'info');
+                        openMailto(formData);
+                    } else {
+                        throw new Error(errText + ` (HTTP ${resp.status})`);
+                    }
+                }
 
-            // Show success message
-            showFeedback('Thank you for your message! I\'ll get back to you as soon as possible.', 'success');
+                // Success
+                showFeedback('Thanks! Your message was sent successfully.', 'success');
+            } else {
+                // No endpoint configured: fallback to mailto
+                openMailto(formData);
+                showFeedback('Opening your email client as a fallback...', 'info');
+            }
 
-            // Reset form
+            // Reset form fields and counter
             form.reset();
             charCount.textContent = '0';
 
         } catch (error) {
             console.error('Form submission error:', error);
-            showFeedback('Sorry, there was an error sending your message. Please try again or contact me directly.', 'error');
+            showFeedback('Sorry, there was an error sending your message. Please try again or email me directly.', 'error');
         } finally {
             // Hide loading state
             submitBtn.classList.remove('loading');
             submitBtn.disabled = false;
         }
-    }
-
-    async function simulateFormSubmission(formData) {
-        // This is a placeholder function. Replace with actual form submission logic
-        // Options include:
-        // 1. EmailJS service
-        // 2. Netlify Forms
-        // 3. Custom backend API
-        // 4. Mailto link (fallback)
-
-        return new Promise((resolve, reject) => {
-            setTimeout(() => {
-                // Simulate success (90% of the time)
-                if (Math.random() > 0.1) {
-                    console.log('Form submitted:', formData);
-                    resolve();
-                } else {
-                    reject(new Error('Simulated submission error'));
-                }
-            }, 2000);
-        });
     }
 
     function showFeedback(message, type) {
@@ -1782,3 +1949,110 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
+
+// Desktop Sidebar Toggle (collapse/expand)
+function initializeSidebarToggle() {
+    const btn = sidebarToggleBtn;
+    if (!btn) return;
+
+    // Apply saved state (optional persistence)
+    const saved = localStorage.getItem('sidebarCollapsed');
+    const initialCollapsed = saved === 'true';
+
+    const applyState = (collapsed) => {
+        document.body.classList.toggle('sidebar-collapsed', collapsed);
+        btn.setAttribute('aria-expanded', String(!collapsed));
+    };
+
+    // Only apply collapsed state on desktop; mobile styles ignore this class
+    if (window.innerWidth > 768) {
+        applyState(initialCollapsed);
+    } else {
+        applyState(false);
+    }
+
+    const toggle = () => {
+        if (window.innerWidth <= 768) return; // ignore on mobile
+        const collapsed = !document.body.classList.contains('sidebar-collapsed');
+        applyState(collapsed);
+        localStorage.setItem('sidebarCollapsed', String(collapsed));
+    };
+
+    btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        toggle();
+    });
+
+    // Keyboard accessibility
+    btn.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            toggle();
+        }
+    });
+
+    // Keep ARIA/state consistent on resize
+    window.addEventListener('resize', () => {
+        const isDesktop = window.innerWidth > 768;
+        if (!isDesktop) {
+            applyState(false);
+        } else {
+            const savedNow = localStorage.getItem('sidebarCollapsed') === 'true';
+            applyState(savedNow);
+        }
+    });
+}
+
+// Anti-copy/selection guards
+function initializeAntiCopyGuards() {
+    const prevent = (e) => {
+        // Allow standard behavior inside form fields
+        const t = e.target;
+        if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) {
+            return; // don't block inside form controls
+        }
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+    };
+
+    // Block common actions
+    document.addEventListener('copy', prevent, true);
+    document.addEventListener('cut', prevent, true);
+    document.addEventListener('paste', prevent, true);
+    document.addEventListener('contextmenu', prevent, true);
+    document.addEventListener('selectstart', prevent, true);
+    document.addEventListener('dragstart', prevent, true);
+
+    // Keyboard shortcuts (Ctrl/Cmd + C/X/A/S, PrintScreen key)
+    document.addEventListener('keydown', (e) => {
+        const key = e.key?.toLowerCase();
+        const ctrlCmd = e.ctrlKey || e.metaKey;
+        const t = e.target;
+        // Allow typical shortcuts inside form controls
+        const inForm = t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable);
+        if (inForm) return;
+        if (
+            ctrlCmd && (key === 'c' || key === 'x' || key === 'a' || key === 's' || key === 'p') ||
+            key === 'PrintScreen'.toLowerCase()
+        ) {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        }
+    }, true);
+
+    // Clear selection programmatically as a fallback
+    document.addEventListener('selectionchange', () => {
+        const active = document.activeElement;
+        if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable)) {
+            return; // don't clear selection inside inputs/textareas
+        }
+        const sel = window.getSelection ? window.getSelection() : document.selection;
+        if (!sel) return;
+        try {
+            if (sel.removeAllRanges) sel.removeAllRanges();
+            else if (sel.empty) sel.empty();
+        } catch (_) { /* ignore */ }
+    });
+}
