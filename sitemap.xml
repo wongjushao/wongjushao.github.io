@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://wongjushao.github.io/</loc>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://wongjushao.github.io/archivement/0_ambankHackerthon(2025).pdf</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://wongjushao.github.io/certificate/CCNA-_Introduction_to_Networks_certificate_wongjushao-gmail-com_8f5c1e5f-9fe8-4d37-9e32-9de7776018e5.pdf</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://wongjushao.github.io/certificate/CompTIA%20IT%20Fundamentals%20(ITF+)%20Certification%20certificate.pdf</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://wongjushao.github.io/certificate/IT_Essentials_certificate_wongjushao-gmail-com_0fdf1259-4f4e-4822-9dd9-0060ea89bf0c.pdf</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+</urlset>

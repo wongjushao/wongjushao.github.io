@@ -159,6 +159,42 @@ The portfolio is fully responsive with breakpoints for:
 - **Parsing**: XML to JSON conversion for article data
 - **Error Handling**: Fallback message when articles can't be loaded
 
+## 🔍 SEO Enhancements
+
+This site includes on-page SEO optimizations:
+
+- Descriptive <title> and meta description
+- Canonical URL and robots directives
+- Open Graph and Twitter Card metadata for rich sharing
+- JSON-LD structured data (Person + WebSite)
+- `sitemap.xml` and `robots.txt` for better crawlability
+- Accessible image alt text and explicit image dimensions
+- Deferred JavaScript for faster First Contentful Paint
+
+### Files
+- `index.html`: head metadata + JSON-LD structured data
+- `sitemap.xml`: list of important URLs (home and certificates)
+- `robots.txt`: allows crawling and points to sitemap
+
+### Updating the sitemap
+When you add new HTML pages or important assets you want indexed, add entries to `sitemap.xml`:
+
+```
+<url>
+  <loc>https://wongjushao.github.io/new-page</loc>
+  <changefreq>monthly</changefreq>
+  <priority>0.7</priority>
+</url>
+```
+
+After pushing to `main`, submit/refresh the sitemap in Google Search Console.
+
+### Recommended follow-ups
+- Add `lastmod` dates to sitemap entries when updating content
+- Create standalone pages for Articles and Projects if you want separate indexable URLs
+- Consider compressing/optimizing `img/profile.jpg` if >150KB for performance
+- Add Medium and GitHub profile links to the `sameAs` array if more networks are used
+
 ## 🚀 Deployment
 
 ### GitHub Pages

@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+# Block temporary or sensitive paths (none currently)
+
+Sitemap: https://wongjushao.github.io/sitemap.xml
