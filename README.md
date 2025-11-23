@@ -1,6 +1,6 @@
 # Wong Jun Keat - Portfolio Website
 
-A modern, interactive portfolio website showcasing cybersecurity expertise and development skills. Features a unique business card interface that transitions into a comprehensive portfolio with dynamic content loading from GitHub and Medium.
+A modern, interactive portfolio website showcasing cybersecurity expertise and development skills. Features a unique business card interface that transitions into a comprehensive portfolio with dynamic content loading from GitHub and Medium. Recent achievements include AmBank Hackathon 2025 (1st Place) and CodeNection Hackathon 2025 (Second Runner-Up, Hardware Track).
 
 ## 🚀 Live Demo
 
